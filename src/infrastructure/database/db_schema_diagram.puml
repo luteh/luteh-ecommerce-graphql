@@ -1,0 +1,112 @@
+@startuml
+entity "Users" {
+    + user_id: SERIAL [PK]
+    --
+    username: VARCHAR(50) [UNIQUE, NOT NULL]
+    email: VARCHAR(100) [UNIQUE, NOT NULL]
+    password: VARCHAR(100) [NOT NULL]
+    created_at: TIMESTAMP [DEFAULT CURRENT_TIMESTAMP]
+}
+
+entity "Shops" {
+    + shop_id: SERIAL [PK]
+    --
+    owner_id: INT [FK -> Users.user_id]
+    shop_name: VARCHAR(100) [NOT NULL]
+    description: TEXT
+    created_at: TIMESTAMP [DEFAULT CURRENT_TIMESTAMP]
+}
+
+entity "Categories" {
+    + category_id: SERIAL [PK]
+    --
+    category_name: VARCHAR(100) [NOT NULL]
+    description: TEXT
+}
+
+entity "Products" {
+    + product_id: SERIAL [PK]
+    --
+    shop_id: INT [FK -> Shops.shop_id]
+    category_id: INT [FK -> Categories.category_id]
+    product_name: VARCHAR(100) [NOT NULL]
+    description: TEXT
+    price: DECIMAL(10, 2) [NOT NULL]
+    stock: INT [NOT NULL]
+    created_at: TIMESTAMP [DEFAULT CURRENT_TIMESTAMP]
+}
+
+entity "Product Images" {
+    + image_id: SERIAL [PK]
+    --
+    product_id: INT [FK -> Products.product_id]
+    image_url: TEXT [NOT NULL]
+    created_at: TIMESTAMP [DEFAULT CURRENT_TIMESTAMP]
+}
+
+entity "Orders" {
+    + order_id: SERIAL [PK]
+    --
+    user_id: INT [FK -> Users.user_id]
+    shop_id: INT [FK -> Shops.shop_id]
+    total_amount: DECIMAL(10, 2) [NOT NULL]
+    order_status: VARCHAR(50) [NOT NULL]
+    created_at: TIMESTAMP [DEFAULT CURRENT_TIMESTAMP]
+}
+
+entity "Order Items" {
+    + order_item_id: SERIAL [PK]
+    --
+    order_id: INT [FK -> Orders.order_id]
+    product_id: INT [FK -> Products.product_id]
+    quantity: INT [NOT NULL]
+    price: DECIMAL(10, 2) [NOT NULL]
+    created_at: TIMESTAMP [DEFAULT CURRENT_TIMESTAMP]
+}
+
+entity "Reviews" {
+    + review_id: SERIAL [PK]
+    --
+    product_id: INT [FK -> Products.product_id]
+    user_id: INT [FK -> Users.user_id]
+    rating: INT [NOT NULL, CHECK (rating >= 1 AND rating <= 5)]
+    comment: TEXT
+    created_at: TIMESTAMP [DEFAULT CURRENT_TIMESTAMP]
+}
+
+entity "Shop Followers" {
+    + follow_id: SERIAL [PK]
+    --
+    shop_id: INT [FK -> Shops.shop_id]
+    user_id: INT [FK -> Users.user_id]
+    created_at: TIMESTAMP [DEFAULT CURRENT_TIMESTAMP]
+}
+
+entity "Product Tags" {
+    + tag_id: SERIAL [PK]
+    --
+    tag_name: VARCHAR(50) [UNIQUE, NOT NULL]
+}
+
+entity "Product Tag Map" {
+    + product_id: INT [FK -> Products.product_id]
+    + tag_id: INT [FK -> Product Tags.tag_id]
+    --
+    [PK (product_id, tag_id)]
+}
+
+' Relationships
+Users ||--o{ Shops : "owns"
+Users ||--o{ Orders : "places"
+Users ||--o{ Reviews : "writes"
+Users ||--o{ "Shop Followers" : "follows"
+Shops ||--o{ Products : "sells"
+Shops ||--o{ Orders : "receives"
+Categories ||--o{ Products : "categorizes"
+Products ||--o{ "Order Items" : "contains"
+Products ||--o{ "Product Images" : "has"
+Products ||--o{ Reviews : "receives"
+Products ||--o{ "Product Tag Map" : "is tagged with"
+"Product Tags" ||--o{ "Product Tag Map" : "tags"
+
+@enduml
